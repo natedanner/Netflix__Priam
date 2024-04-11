@@ -1,4 +1,7 @@
 # Changelog
+## 2024/04/11 4.1.7
+Remove backup V1 #1084
+
 ## 2023/09/02 3.11.108
 Tune block_for_peers_timeout_in_secs #1069
 
