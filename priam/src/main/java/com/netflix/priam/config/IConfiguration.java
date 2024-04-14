@@ -74,6 +74,10 @@ public interface IConfiguration {
         return StringUtils.EMPTY;
     }
 
+    default String getJVMInjectSet() {
+        return StringUtils.EMPTY;
+    }
+
     /** @return Path to Cassandra startup script */
     default String getCassStartupScript() {
         return "/etc/init.d/cassandra start";
