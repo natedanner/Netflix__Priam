@@ -17,8 +17,7 @@
 
 package com.netflix.priam.tuner;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.netflix.priam.config.FakeConfiguration;
 import com.netflix.priam.config.IConfiguration;
@@ -189,6 +188,39 @@ public class JVMOptionTunerTest {
         assertTrue(allJVMOptions.contains(youngHeap));
     }
 
+    @Test
+    public void testInject() throws Exception {
+        JVMOption youngHeap = new JVMOption("-Xmn", "3G", true, true);
+        JVMOption maxHeap = new JVMOption("-Xmx", "12G", false, true);
+
+        JVMOption option1 = new JVMOption("-Dsample");
+        JVMOption option2 = new JVMOption("-Dsample2", "10", false, false);
+        StringBuffer upsert =
+                new StringBuffer(option1.toJVMOptionString() + "," + option2.toJVMOptionString());
+
+        String upsertString =
+                "-Dcassandra.schema_delay_ms=60000 -Dcassandra.skip_schema_check_for_versions=ver1,ver2";
+        config = new GCConfiguration(GCType.G1GC, "", upsert.toString(), "3G", "12G", upsertString);
+
+        JVMOptionsTuner tuner = new JVMOptionsTuner(config);
+        List<String> configuredJVMOptions = tuner.updateJVMOptions().get("configuredJVMOptions");
+
+        for (String s :
+                new String[] {
+                    option1.toJVMOptionString(), option2.toJVMOptionString(), upsertString
+                }) {
+            boolean found = false;
+            for (String f : configuredJVMOptions) {
+                if (f.equalsIgnoreCase(s)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("could not find " + s + " in jvm options", found);
+        }
+    }
+
     private List<JVMOption> getConfiguredJVMOptions(IConfiguration config) throws Exception {
         return getConfiguredJVMOptions(config, true);
     }
@@ -241,17 +273,36 @@ public class JVMOptionTunerTest {
         private String configuredHeapNewSize;
         private String configuredHeapSize;
 
+        private String configuredJVMInject;
+
         GCConfiguration(
                 GCType gcType,
                 String configuredJVMExclude,
                 String configuredJVMUpsert,
                 String configuredHeapNewSize,
                 String configuredHeapSize) {
+            this(
+                    gcType,
+                    configuredJVMExclude,
+                    configuredJVMUpsert,
+                    configuredHeapNewSize,
+                    configuredHeapSize,
+                    "");
+        }
+
+        GCConfiguration(
+                GCType gcType,
+                String configuredJVMExclude,
+                String configuredJVMUpsert,
+                String configuredHeapNewSize,
+                String configuredHeapSize,
+                String configuredJVMInject) {
             this.gcType = gcType;
             this.configuredJVMExclude = configuredJVMExclude;
             this.configuredJVMUpsert = configuredJVMUpsert;
             this.configuredHeapNewSize = configuredHeapNewSize;
             this.configuredHeapSize = configuredHeapSize;
+            this.configuredJVMInject = configuredJVMInject;
         }
 
         @Override
@@ -277,6 +328,11 @@ public class JVMOptionTunerTest {
         @Override
         public String getJVMUpsertSet() {
             return configuredJVMUpsert;
+        }
+
+        @Override
+        public String getJVMInjectSet() {
+            return configuredJVMInject;
         }
     }
 }

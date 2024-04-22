@@ -153,6 +153,9 @@ public class JVMOptionsTuner {
                             .collect(Collectors.toList()));
         }
 
+        final String injectSet = config.getJVMInjectSet();
+        if (injectSet != null && !injectSet.trim().isEmpty()) configuredOptions.add(injectSet);
+
         HashMap<String, List<String>> options = new HashMap<String, List<String>>() {};
         options.put("configuredJVMOptions", configuredOptions);
         options.put("configuredJVMVersionOptions", configuredVersionOptions);

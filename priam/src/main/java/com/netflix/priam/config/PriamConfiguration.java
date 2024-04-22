@@ -224,6 +224,11 @@ public class PriamConfiguration implements IConfiguration {
     }
 
     @Override
+    public String getJVMInjectSet() {
+        return config.get(PRIAM_PRE + ".jvm.options.inject");
+    }
+
+    @Override
     public String getFlushCronExpression() {
         return config.get(PRIAM_PRE + ".flush.cron", "-1");
     }
